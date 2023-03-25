@@ -45,14 +45,9 @@ extension Application {
             port: credentials.port,
             ssl: credentials.ssl,
             eventLoop: self.eventLoopGroup.next()
-        ).flatMap { client in
-            client.login(
-                user: credentials.email,
-                password: credentials.password
-            ).flatMap {
-                let sent = mails.map(client.sendMail)
-                return EventLoopFuture.andAllSucceed(sent, on: self.eventLoopGroup.next())
-            }
+        ).flatMap { 
+            let sent = mails.map(client.sendMail)
+            return EventLoopFuture.andAllSucceed(sent, on: self.eventLoopGroup.next())
         }
     }
 }
