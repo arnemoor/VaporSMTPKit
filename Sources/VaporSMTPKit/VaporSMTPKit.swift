@@ -45,7 +45,9 @@ extension Application {
             ssl: credentials.ssl,
             eventLoop: self.eventLoopGroup.next()
         ).flatMap { client in
-            let sent = mails.map(client.sendMail)
+            let sent = mails.map { mail in
+                client.sendMail(mail)
+            }
             return EventLoopFuture.andAllSucceed(sent, on: self.eventLoopGroup.next())
         }
     }
