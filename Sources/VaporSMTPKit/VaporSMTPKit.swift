@@ -38,14 +38,13 @@ extension Application {
             
             return mail
         }
-        
-        
+
         return SMTPClient.connect(
             hostname: credentials.hostname,
             port: credentials.port,
             ssl: credentials.ssl,
             eventLoop: self.eventLoopGroup.next()
-        ).flatMap { 
+        ).flatMap { client in
             let sent = mails.map(client.sendMail)
             return EventLoopFuture.andAllSucceed(sent, on: self.eventLoopGroup.next())
         }
