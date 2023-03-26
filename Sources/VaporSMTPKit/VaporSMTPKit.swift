@@ -44,13 +44,21 @@ extension Application {
             port: credentials.port,
             ssl: credentials.ssl,
             eventLoop: self.eventLoopGroup.next()
-        ).flatMap { (client: SMTPClient) -> EventLoopFuture<Void> in
+        ).flatMap { client -> EventLoopFuture<Void> in
             let sent = mails.map { mail -> EventLoopFuture<Void> in
-                return client.sendMail(mail)
+                return client.sendMail(mail).flatMap { result in
+                    switch result {
+                    case .success:
+                        return self.eventLoopGroup.next().makeSucceededFuture(())
+                    case .failure(let error):
+                        return self.eventLoopGroup.next().makeFailedFuture(error)
+                    }
+                }
             }
-            return EventLoopFuture.andAllSucceed(sent, on: self.eventLoopGroup.next())
+            return EventLoopFuture.andAllSucceed(sent, on: self.eventLoopGroup.next()).flatMap { _ in
+                return client.close()
+            }
         }
-        
     }
 }
 
